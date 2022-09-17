@@ -4,7 +4,7 @@
 
 # Step 1:
 # Build image and add a descriptive tag
-docker build --tag=v1.0 vinopaul/example_app .
+docker build . --tag=v1.0 vinopaul/example_app
 
 # Step 2: 
 # List docker images
