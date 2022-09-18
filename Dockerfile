@@ -1,4 +1,4 @@
-FROM node:16
+FROM node:16 AS Builder
 
 # Create app directory
 WORKDIR /usr/src/app
@@ -13,5 +13,10 @@ RUN npm install
 # Bundle app source
 COPY . .
 
+FROM node:16.0.0-slim
+WORKDIR /app
+# Bundle app source
+COPY --from=Builder /usr/src/app/ /app/
+
 EXPOSE 3000
-CMD [ "node", "index.js" ]
+CMD ["node", "index.js"]
