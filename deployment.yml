@@ -5,7 +5,7 @@ metadata:
   labels:
     app: example-app
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: example-app
@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: example-app
-        image: public.ecr.aws/i6e3c0d4/example_app
+        image: public.ecr.aws/i6e3c0d4/example_app:v1.0
         ports:
         - containerPort: 3000
