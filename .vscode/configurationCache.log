@@ -1,0 +1,1 @@
+{"buildTargets":["apply-container","build-container","lint","push-container"],"launchTargets":[],"customConfigurationProvider":{"workspaceBrowse":{"browsePath":[],"compilerArgs":[]},"fileIndex":[]}}

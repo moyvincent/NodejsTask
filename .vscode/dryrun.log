@@ -1,0 +1,6 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory `/Users/user/Dania OJ/NodejsTask'
+# add commands to build container here
+docker build -t public.ecr.aws/i6e3c0d4/example_app:v1.0 .
+make: Leaving directory `/Users/user/Dania OJ/NodejsTask'
+ 

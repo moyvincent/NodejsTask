@@ -14,7 +14,7 @@ on: [push]
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  STAGING_EKS_CLUSTER: example_appEKS
+  STAGING_EKS_CLUSTER: example_appEKS2
   EKS_REGION: us-east-1
   ECR_REPO: public.ecr.aws/i6e3c0d4/example_app
   KOJI_SERVICE: strapi-cms
