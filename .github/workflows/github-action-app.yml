@@ -97,5 +97,5 @@ jobs:
         # env:
         #   KOJI_ENVIRONMENT: staging
         run: |
-          kubectl apply -f deployment.yaml
+          kubectl apply -f deployment.yml
           kubectl get deployments
