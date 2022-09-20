@@ -8,7 +8,8 @@ push-container:
 
 apply-container:
 	# add command to deploy container image to EKS
-	kubectl apply -f deployment.yaml
+	kubectl apply -f deployment.yml
+	kubectl apply -f service.yml
 	kubectl get deployments
 
 lint:

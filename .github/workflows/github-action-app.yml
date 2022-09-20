@@ -1,15 +1,13 @@
 name: 'Build Application & Deploy to EKS'
 
-on: [push]
-  # push:
-  #   branches:
-  #     - '*'
-  #     - '/'
-  #     - '**'
-  #   tags:
-  #     - 'v[0-9]+.[0-9]+.[0-9]+'
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
-  # workflow_dispatch:
+  workflow_dispatch:
 
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -45,16 +43,16 @@ jobs:
         with:
           registry-type: public
 
-      # - name: Build prod image and push to ECR
-      #   id: build-prod-image
-      #   if: startsWith(github.ref, 'refs/tags/v')
-      #   run: |
-      #       RELEASE_TAG=$RELEASE_VERSION make build-container
-      #       make push-container
-      #       echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$RELEASE_TAG"
+      - name: Build prod image and push to ECR
+        id: build-prod-image
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+            RELEASE_TAG=$RELEASE_VERSION make build-container
+            make push-container
+            echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$RELEASE_TAG"
       - name: Build, non-prod images and push to Amazon ECR
         id: build-image
-        # if: startsWith(github.ref, 'refs/tags/v') != true
+        if: startsWith(github.ref, 'refs/tags/v') != true
         run: |
             make build-container
             make push-container
@@ -63,7 +61,7 @@ jobs:
   deploy-k8s:
     name: Deploy to EKS
     needs: build
-    # if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -94,9 +92,7 @@ jobs:
         run: |
           aws eks --region $EKS_REGION update-kubeconfig --name $STAGING_EKS_CLUSTER
       - name: Deploy application to EKS cluster
-        # env:
-        #   KOJI_ENVIRONMENT: staging
+        env:
+          KOJI_ENVIRONMENT: staging
         run: |
-          kubectl apply -f deployment.yml
-          kubectl apply -f service.yml
-          kubectl get deployments
+          make apply-container
