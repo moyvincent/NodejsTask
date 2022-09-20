@@ -13,7 +13,8 @@ on:
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  STAGING_EKS_CLUSTER: exampleAppEKS4
+  STAGING_EKS_CLUSTER: exampleAppStagingEKS4
+  PRODUCTION_EKS_CLUSTER: exampleAppProdEKS4
   EKS_REGION: us-east-1
   ECR_REPO: public.ecr.aws/i6e3c0d4/example_app
   KOJI_SERVICE: strapi-cms
@@ -59,11 +60,12 @@ jobs:
             make push-container
             echo "::set-output name=image::$ECR_REGISTRY/$KOJI_SERVICE:branch-${GITHUB_REF##*/}"
      
-  deploy-k8s:
-    name: Deploy to EKS
+  deploy-staging-k8s:
+    name: Deploy to staging EKS
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment: staging
     steps:
       - uses: actions/checkout@v2
       - uses: prepor/action-aws-iam-authenticator@master
@@ -94,6 +96,47 @@ jobs:
           aws eks --region $EKS_REGION update-kubeconfig --name $STAGING_EKS_CLUSTER
       - name: Deploy application to EKS cluster
         env:
-          KOJI_ENVIRONMENT: staging
+          APP_ENVIRONMENT: staging
         run: |
           make apply-container
+
+  deploy-production-k8s:
+    name: Deploy to production EKS
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v2
+      - uses: prepor/action-aws-iam-authenticator@master
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.EKS_REGION }}
+
+      - name: Install and configure kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          curl -LO "https://dl.k8s.io/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
+          echo "$(<kubectl.sha256) kubectl" | sha256sum --check
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+          kubectl version --client
+          aws-iam-authenticator token -i $STAGING_EKS_CLUSTER
+      # - name: Install kustomize
+      #   run: |
+      #       # Setup kustomize
+      #       cd $( mktemp -d )
+      #       curl -sfLo kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv4.5.7/kustomize_v4.5.7_linux_amd64.tar.gz
+      #       chmod u+x ./kustomize
+      - name: Connect to EKS cluster
+        run: |
+          aws eks --region $EKS_REGION update-kubeconfig --name $PRODUCTION_EKS_CLUSTER
+      - name: Deploy application to EKS cluster
+        env:
+          APP_ENVIRONMENT: production
+        run: |
+          make apply-container
+    
